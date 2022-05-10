@@ -1,2 +1,2 @@
 # .github
-Community health files for NVIDIA Triton
+*Community health files for NVIDIA Triton organization*
