@@ -20,7 +20,7 @@ a tool that provides the ability to automate the process of moving a model from 
 ## Getting Started
 To learn about NVIDIA Triton Inference Server, refer to the 
 [Triton developer page](https://developer.nvidia.com/nvidia-triton-inference-server) 
-and read our [Quickstart Guide](https://github.com/triton-inference-server/server/blob/main/docs/quickstart.md). Official 
+and read our [Quickstart Guide](https://github.com/triton-inference-server/server/blob/main/docs/getting_started/quickstart.md). Official 
 Triton Docker containers are available from [NVIDIA NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tritonserver).
 
 ## Product Documentation
