@@ -19,7 +19,7 @@ a tool that provides the ability to automate the process of moving a model from 
 
 ## Getting Started
 To learn about NVIDIA Triton Inference Server, refer to the 
-[Triton developer page](https://developer.nvidia.com/nvidia-triton-inference-server) 
+[Triton developer page](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/introduction/index.html) 
 and read our [Quickstart Guide](https://github.com/triton-inference-server/server/blob/main/docs/getting_started/quickstart.md). Official 
 Triton Docker containers are available from [NVIDIA NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tritonserver).
 
@@ -35,6 +35,9 @@ Release Notes, Support Matrix, and Licenses information are available in the
 Specific end-to-end examples for popular models, such as ResNet, BERT, and DLRM 
 are located in the [NVIDIA Deep Learning Examples page on GitHub](https://github.com/NVIDIA/DeepLearningExamples). Additional generic examples can be found in the 
 [server documents](https://github.com/triton-inference-server/server/tree/main/docs/examples).
+
+## FAQ
+For technical questions about Triton Inference Server, please consult the [Triton FAQ Guide](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/faq.md). Information about future support & updates for Triton can be found in the [Dynamo FAQ Guide](https://forums.developer.nvidia.com/t/nvidia-dynamo-faq/327484).
 
 ## Feedback
 Share feedback or ask questions about NVIDIA Triton Inference Server by filing a 
