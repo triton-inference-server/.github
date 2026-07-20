@@ -51,35 +51,53 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          // One color per conventional-commit type, enforced org-wide.
-          const LABELS = {
-            build:   'c5def5',
-            chore:   'fef2c0',
-            ci:      'bfd4f2',
-            docs:    '0075ca',
-            feat:    '0e8a16',
-            fix:     'd73a4a',
-            perf:    'fbca04',
-            refactor:'5319e7',
-            revert:  'b60205',
-            style:   'f9d0c4',
-            test:    '1d76db',
-            'cherry-pick': '006b75',
+          // Conventional-commit type -> human-readable label, org-wide color,
+          // and description. Titles are validated against the type tokens;
+          // the friendlier label is what gets applied.
+          const TYPES = {
+            build:    { label: 'build',         color: 'c5def5',
+                        description: 'Build system or external dependencies (build: PRs)' },
+            chore:    { label: 'chore',         color: 'fef2c0',
+                        description: 'Maintenance work, no production code change (chore: PRs)' },
+            ci:       { label: 'CI/CD',         color: 'bfd4f2',
+                        description: 'Continuous integration and workflow changes (ci: PRs)' },
+            docs:     { label: 'documentation', color: '0075ca',
+                        description: 'Improvements or additions to documentation (docs: PRs)' },
+            feat:     { label: 'enhancement',   color: 'a2eeef',
+                        description: 'New feature or capability (feat: PRs)' },
+            fix:      { label: 'bug',           color: 'd73a4a',
+                        description: 'Bug fix (fix: PRs)' },
+            perf:     { label: 'performance',   color: 'fbca04',
+                        description: 'Performance improvement (perf: PRs)' },
+            refactor: { label: 'refactor',      color: '5319e7',
+                        description: 'Code change that neither fixes a bug nor adds a feature (refactor: PRs)' },
+            revert:   { label: 'revert',        color: 'b60205',
+                        description: 'Reverts a previous change (revert: PRs)' },
+            style:    { label: 'code style',    color: 'f9d0c4',
+                        description: 'Formatting and style-only changes (style: PRs)' },
+            test:     { label: 'testing',       color: '1d76db',
+                        description: 'Adding or correcting tests (test: PRs)' },
           };
-          const types = Object.keys(LABELS).filter((t) => t !== 'cherry-pick');
+          const CHERRY = { label: 'cherry-pick', color: '006b75',
+                           description: 'Cherry-picked from another branch' };
+          const types = Object.keys(TYPES);
+          const typeLabels = Object.values(TYPES).map((t) => t.label);
           const { owner, repo } = context.repo;
           const number = context.payload.pull_request.number;
 
-          // Create the label if missing, otherwise enforce the org color.
-          async function ensureLabel(name) {
-            const color = LABELS[name];
+          // Create the label if missing, otherwise enforce the org color and
+          // description.
+          async function ensureLabel({ label: name, color, description }) {
             try {
-              await github.rest.issues.createLabel({ owner, repo, name, color });
+              await github.rest.issues.createLabel(
+                { owner, repo, name, color, description });
             } catch (e) {
               if (e.status !== 422) throw e;  // 422 = already exists
               const { data } = await github.rest.issues.getLabel({ owner, repo, name });
-              if (data.color.toLowerCase() !== color) {
-                await github.rest.issues.updateLabel({ owner, repo, name, color });
+              if (data.color.toLowerCase() !== color ||
+                  (data.description || '') !== description) {
+                await github.rest.issues.updateLabel(
+                  { owner, repo, name, color, description });
               }
             }
           }
@@ -94,19 +112,19 @@ jobs:
               'See https://www.conventionalcommits.org/');
             return;
           }
-          const type = match[1];
-          await ensureLabel(type);
+          const entry = TYPES[match[1]];
+          await ensureLabel(entry);
           const { data: current } = await github.rest.issues.listLabelsOnIssue(
             { owner, repo, issue_number: number });
           for (const l of current) {
-            if (types.includes(l.name) && l.name !== type) {
+            if (typeLabels.includes(l.name) && l.name !== entry.label) {
               await github.rest.issues.removeLabel(
                 { owner, repo, issue_number: number, name: l.name });
             }
           }
           await github.rest.issues.addLabels(
-            { owner, repo, issue_number: number, labels: [type] });
-          core.info(`PR title OK; labeled as "${type}".`);
+            { owner, repo, issue_number: number, labels: [entry.label] });
+          core.info(`PR title OK; labeled as "${entry.label}".`);
 
           // 2. Cherry-pick detection: the standard `git cherry-pick -x`
           // trailer in any commit, or an explicit hint in the title/branch.
@@ -120,8 +138,8 @@ jobs:
             hint.test(title) ||
             hint.test(context.payload.pull_request.head.ref);
           if (isCherryPick) {
-            await ensureLabel('cherry-pick');
+            await ensureLabel(CHERRY);
             await github.rest.issues.addLabels(
-              { owner, repo, issue_number: number, labels: ['cherry-pick'] });
+              { owner, repo, issue_number: number, labels: [CHERRY.label] });
             core.info('Cherry-pick detected; labeled as "cherry-pick".');
           }
