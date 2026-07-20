@@ -83,6 +83,18 @@ repos:
   - id: requirements-txt-fixer
   - id: trailing-whitespace
 
-# NOTE: the add-license hook defined by this repository (.pre-commit-hooks.yaml)
-# is exported for consumer repositories; it is not enabled here because this
-# repository has no LICENSE file.
+# This repository defines the centralized add-license hook; run the in-tree
+# version directly so CI validates the hook code being merged. Consumer
+# repositories reference it via `repo: .../.github` + a pinned tag.
+- repo: local
+  hooks:
+  - id: add-license
+    name: Add License
+    entry: tools/add_copyright.py
+    language: script
+    stages: [pre-commit]
+    verbose: true
+    require_serial: true
+    # GitHub issue/PR templates must start with YAML frontmatter; keep
+    # license headers out of them.
+    exclude: ^(\.github/|ISSUE_TEMPLATE/|PULL_REQUEST_TEMPLATE/|pull_request_template)
