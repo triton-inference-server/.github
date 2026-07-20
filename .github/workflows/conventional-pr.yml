@@ -25,12 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Reusable workflow: validates the PR title against the Conventional Commits
-# format (<type>: <Title>) and labels the PR with its commit type.
+# format (<type>: <Title>), labels the PR with its commit type (org-wide
+# color scheme enforced), and labels cherry-pick PRs (detected via the
+# `git cherry-pick -x` commit trailer or a title/branch hint).
 # Call from a repo with:
 #
 #   jobs:
 #     conventional-pr:
-#       uses: triton-inference-server/.github/.github/workflows/conventional-pr.yml@v1.0.0
+#       uses: triton-inference-server/.github/.github/workflows/conventional-pr.yml@v1.1.0
 #
 # The caller must grant `permissions: pull-requests: write`.
 
@@ -49,11 +51,42 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          const types = ['build', 'chore', 'ci', 'docs', 'feat', 'fix',
-                         'perf', 'refactor', 'revert', 'style', 'test'];
+          // One color per conventional-commit type, enforced org-wide.
+          const LABELS = {
+            build:   'c5def5',
+            chore:   'fef2c0',
+            ci:      'bfd4f2',
+            docs:    '0075ca',
+            feat:    '0e8a16',
+            fix:     'd73a4a',
+            perf:    'fbca04',
+            refactor:'5319e7',
+            revert:  'b60205',
+            style:   'f9d0c4',
+            test:    '1d76db',
+            'cherry-pick': '006b75',
+          };
+          const types = Object.keys(LABELS).filter((t) => t !== 'cherry-pick');
+          const { owner, repo } = context.repo;
+          const number = context.payload.pull_request.number;
+
+          // Create the label if missing, otherwise enforce the org color.
+          async function ensureLabel(name) {
+            const color = LABELS[name];
+            try {
+              await github.rest.issues.createLabel({ owner, repo, name, color });
+            } catch (e) {
+              if (e.status !== 422) throw e;  // 422 = already exists
+              const { data } = await github.rest.issues.getLabel({ owner, repo, name });
+              if (data.color.toLowerCase() !== color) {
+                await github.rest.issues.updateLabel({ owner, repo, name, color });
+              }
+            }
+          }
+
+          // 1. Validate the PR title and apply the type label.
           const title = context.payload.pull_request.title;
           const match = title.match(/^(\w+)(\([^)]*\))?!?: .+/);
-
           if (!match || !types.includes(match[1])) {
             core.setFailed(
               `PR title "${title}" does not follow the Conventional Commits ` +
@@ -62,17 +95,7 @@ jobs:
             return;
           }
           const type = match[1];
-
-          // Ensure the label exists, then apply it (idempotent). Remove any
-          // stale type label left from a previous title.
-          const { owner, repo } = context.repo;
-          const number = context.payload.pull_request.number;
-          try {
-            await github.rest.issues.createLabel(
-              { owner, repo, name: type, color: 'ededed' });
-          } catch (e) {
-            if (e.status !== 422) throw e;  // 422 = already exists
-          }
+          await ensureLabel(type);
           const { data: current } = await github.rest.issues.listLabelsOnIssue(
             { owner, repo, issue_number: number });
           for (const l of current) {
@@ -84,3 +107,21 @@ jobs:
           await github.rest.issues.addLabels(
             { owner, repo, issue_number: number, labels: [type] });
           core.info(`PR title OK; labeled as "${type}".`);
+
+          // 2. Cherry-pick detection: the standard `git cherry-pick -x`
+          // trailer in any commit, or an explicit hint in the title/branch.
+          // Additive only - a manually applied label is never removed.
+          const commits = await github.paginate(github.rest.pulls.listCommits,
+            { owner, repo, pull_number: number, per_page: 100 });
+          const trailer = /cherry[- ]?picked from commit [0-9a-f]{7,40}/i;
+          const hint = /cherry[- ]?pick/i;
+          const isCherryPick =
+            commits.some((c) => trailer.test(c.commit.message)) ||
+            hint.test(title) ||
+            hint.test(context.payload.pull_request.head.ref);
+          if (isCherryPick) {
+            await ensureLabel('cherry-pick');
+            await github.rest.issues.addLabels(
+              { owner, repo, issue_number: number, labels: ['cherry-pick'] });
+            core.info('Cherry-pick detected; labeled as "cherry-pick".');
+          }
