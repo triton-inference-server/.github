@@ -154,14 +154,23 @@ jobs:
           core.info(`Labeled: ${wanted.join(', ')}.`);
 
           // 4. Cherry-pick detection: the standard `git cherry-pick -x`
-          // trailer in any commit, or an explicit hint in the title/branch.
+          // trailer in any commit, an explicit hint in the title/branch, or
+          // a trailing "(#N)" squash-merge reference to a DIFFERENT PR (the
+          // signature of cherry-picking an already squash-merged commit).
           // Additive only - a manually applied label is never removed.
           const trailer = /cherry[- ]?picked from commit [0-9a-f]{7,40}/i;
           const hint = /cherry[- ]?pick/i;
+          const prRef = /\(#(\d+)\)$/;
+          const refersToOtherPr = (subject) => {
+            const m = subject.trim().match(prRef);
+            return m !== null && Number(m[1]) !== number;
+          };
           const isCherryPick =
             commits.some((c) => trailer.test(c.commit.message)) ||
             hint.test(title) ||
-            hint.test(context.payload.pull_request.head.ref);
+            hint.test(context.payload.pull_request.head.ref) ||
+            refersToOtherPr(title) ||
+            commits.some((c) => refersToOtherPr(c.commit.message.split('\n', 1)[0]));
           if (isCherryPick) {
             await ensureLabel(CHERRY);
             await github.rest.issues.addLabels(
