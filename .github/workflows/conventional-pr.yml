@@ -102,7 +102,7 @@ jobs:
             }
           }
 
-          // 1. Validate the PR title and apply the type label.
+          // 1. Validate the PR title (the squash-merge commit title).
           const title = context.payload.pull_request.title;
           const match = title.match(/^(\w+)(\([^)]*\))?!?: .+/);
           if (!match || !types.includes(match[1])) {
@@ -112,28 +112,50 @@ jobs:
               'See https://www.conventionalcommits.org/');
             return;
           }
-          const entry = TYPES[match[1]];
-          await ensureLabel(entry);
+
+          // 2. Derive the full type set: the title plus every conforming
+          // commit subject in the PR (merge commits are ignored).
+          const commits = await github.paginate(github.rest.pulls.listCommits,
+            { owner, repo, pull_number: number, per_page: 100 });
+          const derived = new Set([match[1]]);
+          for (const c of commits) {
+            const subject = c.commit.message.split('\n', 1)[0];
+            if (/^Merge /.test(subject)) continue;
+            const m = subject.match(/^(\w+)(\([^)]*\))?!?: .+/);
+            if (m && types.includes(m[1])) derived.add(m[1]);
+            else core.warning(`Commit ${c.sha.slice(0, 9)} subject is not ` +
+                              `a conventional commit: "${subject}"`);
+          }
+
           const { data: current } = await github.rest.issues.listLabelsOnIssue(
             { owner, repo, issue_number: number });
+          // Fail-safe: no derivable type and no manually assigned type label.
+          if (derived.size === 0 &&
+              !current.some((l) => typeLabels.includes(l.name))) {
+            core.setFailed(
+              'No conventional commit type could be determined from the PR ' +
+              'title or its commits, and no type label is assigned.');
+            return;
+          }
+
+          // 3. Apply one label per derived type; drop stale auto-managed
+          // labels (incl. legacy raw-token names from earlier versions).
+          const wanted = [...derived].map((t) => TYPES[t].label);
+          for (const t of derived) await ensureLabel(TYPES[t]);
           for (const l of current) {
-            // Also removes legacy raw-token labels from earlier workflow
-            // versions (e.g. "ci" before it became "CI/CD").
             if ((typeLabels.includes(l.name) || types.includes(l.name)) &&
-                l.name !== entry.label) {
+                !wanted.includes(l.name)) {
               await github.rest.issues.removeLabel(
                 { owner, repo, issue_number: number, name: l.name });
             }
           }
           await github.rest.issues.addLabels(
-            { owner, repo, issue_number: number, labels: [entry.label] });
-          core.info(`PR title OK; labeled as "${entry.label}".`);
+            { owner, repo, issue_number: number, labels: wanted });
+          core.info(`Labeled: ${wanted.join(', ')}.`);
 
-          // 2. Cherry-pick detection: the standard `git cherry-pick -x`
+          // 4. Cherry-pick detection: the standard `git cherry-pick -x`
           // trailer in any commit, or an explicit hint in the title/branch.
           // Additive only - a manually applied label is never removed.
-          const commits = await github.paginate(github.rest.pulls.listCommits,
-            { owner, repo, pull_number: number, per_page: 100 });
           const trailer = /cherry[- ]?picked from commit [0-9a-f]{7,40}/i;
           const hint = /cherry[- ]?pick/i;
           const isCherryPick =
