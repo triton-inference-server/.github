@@ -65,7 +65,7 @@ jobs:
                         description: 'Improvements or additions to documentation (docs: PRs)' },
             feat:     { label: 'enhancement',   color: 'a2eeef',
                         description: 'New feature or capability (feat: PRs)' },
-            fix:      { label: 'bug',           color: 'd73a4a',
+            fix:      { label: 'fix',           color: 'd73a4a',
                         description: 'Bug fix (fix: PRs)' },
             perf:     { label: 'performance',   color: 'fbca04',
                         description: 'Performance improvement (perf: PRs)' },
@@ -117,7 +117,10 @@ jobs:
           const { data: current } = await github.rest.issues.listLabelsOnIssue(
             { owner, repo, issue_number: number });
           for (const l of current) {
-            if (typeLabels.includes(l.name) && l.name !== entry.label) {
+            // Also removes legacy raw-token labels from earlier workflow
+            // versions (e.g. "ci" before it became "CI/CD").
+            if ((typeLabels.includes(l.name) || types.includes(l.name)) &&
+                l.name !== entry.label) {
               await github.rest.issues.removeLabel(
                 { owner, repo, issue_number: number, name: l.name });
             }
