@@ -16,6 +16,20 @@ Agreement](https://github.com/NVIDIA/triton-inference-server/blob/master/Triton-
 - [ ] All template sections are filled out.
 - [ ] Optional: Additional screenshots for behavior/output changes with before/after.
 
+#### Commit Type:
+Check the [conventional commit type](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#type)
+box here and add the label to the github PR.
+- [ ] build
+- [ ] ci
+- [ ] docs
+- [ ] feat
+- [ ] fix
+- [ ] perf
+- [ ] refactor
+- [ ] revert
+- [ ] style
+- [ ] test
+
 #### Related PRs:
 <!-- Related PRs from other Repositories -->
 
