@@ -63,7 +63,7 @@ jobs:
                         description: 'Continuous integration and workflow changes (ci: PRs)' },
             docs:     { label: 'documentation', color: '0075ca',
                         description: 'Improvements or additions to documentation (docs: PRs)' },
-            feat:     { label: 'enhancement',   color: 'a2eeef',
+            feat:     { label: 'feature',       color: 'a2eeef',
                         description: 'New feature or capability (feat: PRs)' },
             fix:      { label: 'fix',           color: 'd73a4a',
                         description: 'Bug fix (fix: PRs)' },
