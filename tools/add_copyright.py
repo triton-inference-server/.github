@@ -95,12 +95,24 @@ def get_license(license_path: Optional[str] = None) -> str:
     Returns the contents of the LICENSE file.
 
     Note: The LICENSE file itself is never modified by this hook; its
-    copyright year is maintained manually by each repository.
+    copyright year is maintained manually by each repository. If the file
+    carries an NVIDIA copyright whose highest year is not the current year,
+    the hook fails so the year gets updated in a deliberate commit.
     """
     license_path = license_path or get_license_path()
 
     with open(license_path, "r") as license_file:
-        return license_file.read()
+        text = license_file.read()
+
+    match = COPYRIGHT_YEAR_PAT.search(text)
+    if match and match.groups()[2] != current_year:
+        raise SystemExit(
+            f"ERROR: the LICENSE copyright year is stale "
+            f"({match.group(0).strip()!r}); its highest year must be "
+            f"{current_year}. This hook never modifies LICENSE files - "
+            "update the year in a deliberate commit."
+        )
+    return text
 
 
 def load_license_text() -> None:
