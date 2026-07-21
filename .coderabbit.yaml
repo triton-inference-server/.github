@@ -1,0 +1,65 @@
+# Copyright 2023-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# Pilot configuration (verification on this repository only; fleet rollout
+# is decided after evaluation). Requires the CodeRabbit GitHub App to be
+# installed on the organization.
+language: "en-US"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    # Drafts included during the pilot so the open TRI-1100 PR gets
+    # reviewed; revisit (likely false) before any fleet rollout.
+    drafts: true
+  path_instructions:
+    - path: ".github/workflows/*.yml"
+      instructions: |
+        These workflows are consumed org-wide (reusable workflows pinned by
+        tag). Review github-script blocks for correctness and injection
+        safety, and flag any behavior change that would require a new tag
+        and consumer rev bumps.
+    - path: "tools/*.py"
+      instructions: |
+        This tooling runs as a centralized pre-commit hook in consumer
+        repositories with cwd set to the consumer repo root. It must never
+        modify LICENSE files and must keep license headers out of .github/
+        templates.
+    - path: "ISSUE_TEMPLATE/**"
+      instructions: |
+        Org-wide inherited defaults. Issue reporting must keep routing to
+        the server repository; frontmatter must stay the first line of any
+        template file.
+
+chat:
+  auto_reply: true
