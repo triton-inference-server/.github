@@ -97,4 +97,4 @@ repos:
     require_serial: true
     # GitHub issue/PR templates must start with YAML frontmatter; keep
     # license headers out of them.
-    exclude: ^(\.github/|ISSUE_TEMPLATE/|PULL_REQUEST_TEMPLATE/|pull_request_template)
+    exclude: ^(ISSUE_TEMPLATE/|PULL_REQUEST_TEMPLATE/|pull_request_template)
