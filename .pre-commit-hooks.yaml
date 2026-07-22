@@ -34,4 +34,4 @@
   # GitHub issue/PR templates must start with YAML frontmatter; keep
   # license headers out of them. Workflows and other .github/ files ARE
   # processed.
-  exclude: ^\.github/(ISSUE_TEMPLATE/|PULL_REQUEST_TEMPLATE/|pull_request_template)
+  exclude: ^\.github/(ISSUE_TEMPLATE/|PULL_REQUEST_TEMPLATE|pull_request_template)

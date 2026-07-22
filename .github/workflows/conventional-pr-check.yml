@@ -38,4 +38,5 @@ jobs:
     permissions:
       pull-requests: write
       issues: write
+      contents: read
     uses: ./.github/workflows/conventional-pr.yml

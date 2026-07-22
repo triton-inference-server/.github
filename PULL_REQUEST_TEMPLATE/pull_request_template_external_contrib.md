@@ -2,7 +2,7 @@
 <!-- Describe your pull request here. Please read the text below the line, and make sure you follow the checklist.-->
 
 #### Checklist
-- [ ] I have read the [Contribution guidelines](#../../CONTRIBUTING.md) and signed the [Contributor License
+- [ ] I have read the [Contribution guidelines](https://github.com/triton-inference-server/server/blob/main/CONTRIBUTING.md) and signed the [Contributor License
 Agreement](https://github.com/NVIDIA/triton-inference-server/blob/master/Triton-CCLA-v1.pdf)
 - [ ] PR title reflects the change and is of format `<commit_type>: <Title>`
 - [ ] Changes are described in the pull request.
@@ -20,6 +20,7 @@ Agreement](https://github.com/NVIDIA/triton-inference-server/blob/master/Triton-
 Check the [conventional commit type](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#type)
 box here and add the label to the github PR.
 - [ ] build
+- [ ] chore
 - [ ] ci
 - [ ] docs
 - [ ] feat

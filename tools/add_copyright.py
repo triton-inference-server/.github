@@ -184,7 +184,7 @@ def update_or_add_header(
 
     # As a sanity check, make sure we didn't accidentally add the copyright header
     # twice, or add a new header when one was already present.
-    if content.count("Copyright (c)") != 1:
+    if len(COPYRIGHT_YEAR_PAT.findall(content)) != 1:
         print(
             f"WARNING: Something went wrong while processing: {path}!\n"
             "Please check if the copyright header was included twice or wasn't added at all. "
@@ -333,9 +333,9 @@ if __name__ == "__main__":
 #
 # Integration Tests
 #
-import tempfile
+import tempfile  # noqa: E402  (test-section import, deliberately mid-file)
 
-import pytest
+import pytest  # noqa: E402  (test-section import, deliberately mid-file)
 
 
 # Processes provided text through the copyright hook by writing it to a temporary file.
